@@ -160,10 +160,69 @@ def apriori(filepath, minFrequency):
 print(apriori('./Datasets/chess.dat',0.9))
 
 
+class Eclat :
+    
+    def __init__(self, minFrequency, total_trans):
+        self.minFrequency = minFrequency
+        self.total_trans = total_trans
+        self.FreqItemsets = dict()
+    
+    def get_children(self, itemsets, tids):
+        children = []
+        for test_itemset, test_tids in itemsets:
+            intersect_tids = tids & test_tids
+            intersectFreq = self.get_frequency(len(intersect_tids))
+            if intersectFreq >= self.minFrequency:
+                children.append((test_itemset,intersect_tids))
+        return children
+    
+    def get_frequency(self,num_trans):
+        return num_trans/self.total_trans
+    
+    def runner(self, frequent_itemset, data):
+        while data:
+            current_itemset, current_tids = data.pop()
+            currentFreq = self.get_frequency(len(current_tids)) 
+            if currentFreq >= self.minFrequency:
+                self.FreqItemsets[tuple(frequent_itemset + [current_itemset])] = currentFreq
+                children = self.get_children(data, current_tids)
+                self.runner(frequent_itemset + [current_itemset], sorted(children, key=lambda item: len(item[1]), reverse=True))
+    
+    def get_frequent_itemsets(self):
+        return self.FreqItemsets
+    
+    
+def to_vertical(data):
+    data2vert = {}
+    for j in range(len(data)):
+        for item in data[j]:
+            if item not in data2vert:
+                data2vert[item] = set()
+            data2vert[item].add(j+1)
+    return data2vert
+
+
 def alternative_miner(filepath, minFrequency):
-	"""Runs the alternative frequent itemset mining algorithm on the specified file with the given minimum frequency"""
-	# TODO: either second implementation of the apriori algorithm or implementation of the depth first search algorithm
-	print("Not implemented")
+    """Runs the alternative frequent itemset mining algorithm on the specified file with the given minimum frequency"""
+    start = time.time()
+    data = Dataset(filepath)
+    num_trans = data.trans_num()
+    data = [data.get_transaction(i) for i in range(num_trans)]
+    data = to_vertical(data)
+    data = sorted(data.items(), key=lambda item: len(item[1]), reverse=True)
+    frequent_itemset = []
+    eclat = Eclat(minFrequency, num_trans)
+    eclat.runner(frequent_itemset, data)
+    FreqItemsets = eclat.get_frequent_itemsets()
+    output(FreqItemsets)
+    end = time.time()
+    t = end - start
+    return t
+
+def output(FreqItemsets):
+    sorted_FreqItemsets = sorted(FreqItemsets.items(), key=lambda item: (len(item[0]),item[0]))
+    for i in range(len(sorted_FreqItemsets)):
+        print(str(list(sorted_FreqItemsets[i][0])) + ' (' + str(sorted_FreqItemsets[i][1]) + ')')
 
 data = Dataset("./Datasets/toy.dat")
 trans = data.get_transaction(1)
