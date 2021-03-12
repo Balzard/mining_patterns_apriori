@@ -184,6 +184,7 @@ class Eclat :
             current_itemset, current_tids = data.pop()
             currentFreq = self.get_frequency(len(current_tids)) 
             if currentFreq >= self.minFrequency:
+                print(sorted(frequent_itemset + [current_itemset]), (currentFreq))
                 self.FreqItemsets[tuple(frequent_itemset + [current_itemset])] = currentFreq
                 children = self.get_children(data, current_tids)
                 self.runner(frequent_itemset + [current_itemset], sorted(children, key=lambda item: len(item[1]), reverse=True))
@@ -213,16 +214,9 @@ def alternative_miner(filepath, minFrequency):
     frequent_itemset = []
     eclat = Eclat(minFrequency, num_trans)
     eclat.runner(frequent_itemset, data)
-    FreqItemsets = eclat.get_frequent_itemsets()
-    output(FreqItemsets)
     end = time.time()
     t = end - start
     return t
-
-def output(FreqItemsets):
-    sorted_FreqItemsets = sorted(FreqItemsets.items(), key=lambda item: (len(item[0]),item[0]))
-    for i in range(len(sorted_FreqItemsets)):
-        print(str(list(sorted_FreqItemsets[i][0])) + ' (' + str(sorted_FreqItemsets[i][1]) + ')')
 
 data = Dataset("./Datasets/toy.dat")
 trans = data.get_transaction(1)
